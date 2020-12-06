@@ -1,0 +1,9 @@
+[submodule "lib/cairo"]
+	path = lib/cairo
+	url = git://anongit.freedesktop.org/git/cairo
+[submodule "lib/freetype2"]
+	path = lib/freetype2
+	url = git@github.com:freetype/freetype2.git
+[submodule "lib/pixman"]
+	path = lib/pixman
+	url = git://anongit.freedesktop.org/git/pixman.git
