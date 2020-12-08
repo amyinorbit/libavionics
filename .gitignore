@@ -1,0 +1,6 @@
+.DS_Store
+.cache
+build
+build.win
+*.ttf
+compile_commands.json
