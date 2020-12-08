@@ -1,6 +1,6 @@
 #include <ccore/log.h>
 #include <ccore/tpool.h>
-#include <libmfd/display.h>
+#include <libavionics/display.h>
 #include "app.h"
 #include "gl.h"
 #include <pthread.h>

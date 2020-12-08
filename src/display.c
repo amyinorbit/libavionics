@@ -6,7 +6,7 @@
 // Licensed under the MIT License
 // =^•.•^=
 //===--------------------------------------------------------------------------------------------===
-#include <libmfd/display.h>
+#include <libavionics/display.h>
 #include <ccore/memory.h>
 #include <ccore/log.h>
 #include <stdlib.h>
