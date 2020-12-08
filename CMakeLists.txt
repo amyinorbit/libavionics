@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(mfd VERSION 0.0.1 LANGUAGES C)
+project(libavionics VERSION 0.0.1 LANGUAGES C)
 
 if(APPLE)
     message("building with macOS support")
