@@ -32,6 +32,7 @@ static void init_buffer(av_display_t *display, int idx) {
     size_t size = display->width * display->height * 4;
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, display->pbos[idx]);
     glBufferData(GL_PIXEL_UNPACK_BUFFER, size, NULL, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 }
 
 void *map_buffer(av_display_t *display, int idx) {
@@ -39,13 +40,16 @@ void *map_buffer(av_display_t *display, int idx) {
     size_t size = display->width * display->height * 4;
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, display->pbos[idx]);
     glBufferData(GL_PIXEL_UNPACK_BUFFER, size, NULL, GL_STREAM_DRAW);
-    return glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
+    void *buffer = glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    return buffer;
 }
 
 void unmap_buffer(av_display_t *display, int idx) {
     CCASSERT(display);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, display->pbos[idx]);
     glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 }
 
 av_display_t *av_display_new(unsigned width, unsigned height) {
@@ -80,6 +84,7 @@ av_display_t *av_display_new(unsigned width, unsigned height) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
     display->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
@@ -93,6 +98,8 @@ av_display_t *av_display_new(unsigned width, unsigned height) {
 
 void av_display_delete(av_display_t *display) {
     CCASSERT(display);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     pthread_mutex_destroy(&display->mt);
     glDeleteTextures(1, &display->texture);
     glDeleteBuffers(2, display->pbos);
@@ -110,9 +117,9 @@ void *av_display_get_back_buffer(av_display_t *display) {
 void av_display_finish_back_buffer(av_display_t *display) {
     CCASSERT(display);
     if(!display->current) return;
-    pthread_mutex_lock(&display->mt);
     const void *src = cairo_image_surface_get_data(display->surface);
     memcpy(display->current, src, 4 * display->width * display->height);
+    pthread_mutex_lock(&display->mt);
     display->is_back_ready = true;
     pthread_mutex_unlock(&display->mt);
 }
@@ -120,7 +127,6 @@ void av_display_finish_back_buffer(av_display_t *display) {
 void av_display_upload(av_display_t *display) {
     CCASSERT(display);
     if(!display->is_back_ready) return;
-    pthread_mutex_lock(&display->mt);
 
     // First, upload the data from the back glBufferData
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, display->pbos[display->front]);
@@ -130,10 +136,12 @@ void av_display_upload(av_display_t *display) {
         display->width, display->height,
         GL_BGRA, GL_UNSIGNED_BYTE, NULL
     );
-    // glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
     unmap_buffer(display, display->back);
+    
+    pthread_mutex_lock(&display->mt);
     display->back = (display->back + 1) % 2;
     display->front = (display->front + 1) % 2;
     display->current = map_buffer(display, display->back);
