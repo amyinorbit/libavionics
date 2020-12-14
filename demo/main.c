@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <unistd.h>
+#include <xnav/geo.h>
 
 #include <ccore/math.h>
 #include <cairo/cairo.h>

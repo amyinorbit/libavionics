@@ -13,7 +13,7 @@
 #include <string.h>
 #include "glad.h"
 
-struct mfd_display_s {
+struct av_display_s {
     unsigned width, height;
     unsigned texture;
 
@@ -27,14 +27,14 @@ struct mfd_display_s {
 };
 
 
-static void init_buffer(mfd_display_t *display, int idx) {
+static void init_buffer(av_display_t *display, int idx) {
     CCASSERT(display);
     size_t size = display->width * display->height * 4;
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, display->pbos[idx]);
     glBufferData(GL_PIXEL_UNPACK_BUFFER, size, NULL, GL_STREAM_DRAW);
 }
 
-void *map_buffer(mfd_display_t *display, int idx) {
+void *map_buffer(av_display_t *display, int idx) {
     CCASSERT(display);
     size_t size = display->width * display->height * 4;
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, display->pbos[idx]);
@@ -42,17 +42,17 @@ void *map_buffer(mfd_display_t *display, int idx) {
     return glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
 }
 
-void unmap_buffer(mfd_display_t *display, int idx) {
+void unmap_buffer(av_display_t *display, int idx) {
     CCASSERT(display);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, display->pbos[idx]);
     glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 }
 
-mfd_display_t *display_new(unsigned width, unsigned height) {
+av_display_t *av_display_new(unsigned width, unsigned height) {
     CCASSERT(width > 0);
     CCASSERT(height > 0);
 
-    mfd_display_t *display = cc_alloc(sizeof(mfd_display_t));
+    av_display_t *display = cc_alloc(sizeof(av_display_t));
     display->width = width;
     display->height = height;
 
@@ -91,7 +91,7 @@ mfd_display_t *display_new(unsigned width, unsigned height) {
     return display;
 }
 
-void display_delete(mfd_display_t *display) {
+void av_display_delete(av_display_t *display) {
     CCASSERT(display);
     pthread_mutex_destroy(&display->mt);
     glDeleteTextures(1, &display->texture);
@@ -102,12 +102,12 @@ void display_delete(mfd_display_t *display) {
     cc_free(display);
 }
 
-void *display_get_back_buffer(mfd_display_t *display) {
+void *av_display_get_back_buffer(av_display_t *display) {
     if(display->is_back_ready) return NULL; // We haven't drawn the old frame yet
     return display->current;
 }
 
-void display_finish_back_buffer(mfd_display_t *display) {
+void av_display_finish_back_buffer(av_display_t *display) {
     CCASSERT(display);
     if(!display->current) return;
     pthread_mutex_lock(&display->mt);
@@ -117,7 +117,7 @@ void display_finish_back_buffer(mfd_display_t *display) {
     pthread_mutex_unlock(&display->mt);
 }
 
-void display_upload(mfd_display_t *display) {
+void av_display_upload(av_display_t *display) {
     CCASSERT(display);
     if(!display->is_back_ready) return;
     pthread_mutex_lock(&display->mt);
@@ -139,18 +139,16 @@ void display_upload(mfd_display_t *display) {
     display->current = map_buffer(display, display->back);
     display->is_back_ready = false;
 
-    // CCDEBUG("done. front: %d, back: %d. buffer: %p", display->front, display->back, display->current);
-
     pthread_mutex_unlock(&display->mt);
 }
 
-cairo_t *display_get_cairo(const mfd_display_t *display) {
+cairo_t *av_display_get_cairo(const av_display_t *display) {
     CCASSERT(display);
     CCASSERT(display->cairo);
     return display->cairo;
 }
 
-unsigned display_get_texture(const mfd_display_t *display) {
+unsigned av_display_get_texture(const av_display_t *display) {
     CCASSERT(display);
     return display->texture;
 }
