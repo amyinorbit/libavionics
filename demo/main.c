@@ -40,38 +40,102 @@ static void efis_frame(app_data_t *data) {
 
     cairo_t *cr = display_get_cairo(data->efis);
 
-    cairo_set_antialias(cr, CAIRO_ANTIALIAS_BEST);
+    // cairo_set_antialias(cr, CAIRO_ANTIALIAS_SUBPIXEL);
 
 
-    cairo_set_source_rgb(cr, 0, 0, 0);
+    cairo_set_source_rgba(cr, 0, 0, 0, 0);
     cairo_identity_matrix(cr);
+    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
     cairo_rectangle(cr, 0, 0, WIDTH, HEIGHT);
     cairo_fill(cr);
-    cairo_translate(cr, WIDTH/2, HEIGHT/2);
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
 
+
+    cairo_translate(cr, 256, 0);
+    cairo_set_source_rgb(cr, 1, 1, 1);
     cairo_set_line_width(cr, 2);
-    cairo_set_source_rgb(cr, 1, 0.4, 1);
-    cairo_set_line_cap(cr, CAIRO_LINE_CAP_SQUARE);
-    cairo_move_to(cr, 0, 0);
-    cairo_line_to(cr, 0, -100);
+    cairo_move_to(cr, -246.5, 499.5);
+    cairo_line_to(cr, 246.5, 499.5);
     cairo_stroke(cr);
+
+    cairo_translate(cr, 0, 384);
+
+    // cairo_set_line_width(cr, 2);
+    // cairo_set_source_rgb(cr, 1, 0.4, 1);
+    cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+    // cairo_move_to(cr, 0, 0);
+    // cairo_line_to(cr, 0, -99.5);
+    // cairo_stroke(cr);
+    //
+    // cairo_set_source_rgb(cr, 1, 1, 1);
+    // cairo_move_to(cr, 0, -100);
+    // cairo_line_to(cr, 50, -150);
+    // cairo_line_to(cr, 0, -200);
+    // cairo_stroke(cr);
+
+    #define RANGE_FULL (330)
+    #define RANGE_HALF (RANGE_FULL/2)
+
 
     cairo_set_source_rgb(cr, 1, 1, 1);
-    cairo_move_to(cr, 0, -100);
-    cairo_line_to(cr, 50, -150);
-    cairo_line_to(cr, 0, -200);
+
+    cairo_set_line_width(cr, 2);
+    const double x_max = RANGE_FULL * cos(radians(45));
+    const double y_max = -floor(RANGE_FULL * sin(radians(45)) - 2);
+    cairo_arc(cr, 0, 0, RANGE_FULL, -radians(135), -radians(45));
+    cairo_stroke(cr);
+    cairo_arc(cr, 0, 0, RANGE_HALF, radians(-176), radians(-2));
     cairo_stroke(cr);
 
-    cairo_arc(cr, 0, 0, 300, -radians(135), -radians(45));
+    // static const double dashes[] = {8.f, 8.f};
+    // cairo_set_dash(cr, dashes, 2, 4.f);
+    // cairo_move_to(cr, x_max, y_max);
+    // cairo_line_to(cr, x_max, -88);
+    // cairo_line_to(cr, x_max-60, 0);
+    // cairo_line_to(cr, -(x_max-60), 0);
+    // cairo_line_to(cr, -x_max, -88);
+    // cairo_line_to(cr, -x_max, y_max);
+    // cairo_stroke(cr);
+    // cairo_set_dash(cr, NULL, 0, 0);
+
+    // cairo_stroke(cr);
+
+    cairo_set_source_rgb(cr, 1, .4, 1);
+    cairo_set_line_width(cr, 2);
+    cairo_move_to(cr, -5, 100);
+    cairo_line_to(cr, 5, -100);
     cairo_stroke(cr);
-    cairo_arc(cr, 0, 0, 150, radians(-180), 0);
+    cairo_set_line_width(cr, 2);
+    cairo_set_source_rgb(cr, 1, 1, 1);
+    cairo_move_to(cr, 5, -100);
+    cairo_line_to(cr, -100, -300);
+
+
+    cairo_set_line_width(cr, 3);
+    cairo_move_to(cr, 0.5, -16.5);
+    cairo_line_to(cr, 0.5, 16.5);
+    cairo_stroke(cr);
+    cairo_move_to(cr, -15.5, 0.5);
+    cairo_line_to(cr, 16.5, 0.5);
+    cairo_stroke(cr);
+    cairo_move_to(cr, -4.5, 16.5);
+    cairo_line_to(cr, 5.5, 16.5);
     cairo_stroke(cr);
 
-    cairo_move_to(cr, 12, 12);
+    // cairo_move_to(cr, 12.5, -12.5);
+    cairo_set_source_rgb(cr, 0.392, 0.827, 0.996);
     cairo_set_font_face(cr, data->font);
     cairo_set_font_size(cr, 16);
-    cairo_show_text(cr, "ESKDO");
+    cairo_move_to(cr, -(x_max-62), 6);
+    cairo_show_text(cr, "20");
     cairo_fill(cr);
+
+    cairo_move_to(cr, -x_max-1, y_max + 12);
+    cairo_show_text(cr, "40");
+    cairo_fill(cr);
+    // cairo_show_text(cr, "ESKDO");
+    // cairo_fill(cr);
+
 
     display_finish_back_buffer(data->efis);
 }

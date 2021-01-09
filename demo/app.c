@@ -102,7 +102,7 @@ void app_main(
     gladLoadGL();
 
     glViewport(0, 0, desc->width, desc->height);
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
 
     // glEnable(GL_DEPTH_TEST);
     // glDepthFunc(GL_LESS);
