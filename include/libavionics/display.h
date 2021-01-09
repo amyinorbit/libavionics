@@ -14,28 +14,28 @@
 extern "C" {
 #endif
 
-typedef struct mfd_display_s mfd_display_t;
+typedef struct av_display_s av_display_t;
 
 /// Allocates memory for a new
-mfd_display_t *display_new(unsigned width, unsigned height);
+av_display_t *av_display_new(unsigned width, unsigned height);
 
 ///
-void display_delete(mfd_display_t *display);
+void av_display_delete(av_display_t *display);
 
 ///
-void *display_get_back_buffer(mfd_display_t *display);
+void *av_display_get_back_buffer(av_display_t *display);
 
 ///
-void display_finish_back_buffer(mfd_display_t *display);
+void av_display_finish_back_buffer(av_display_t *display);
 
 ///
-void display_upload(mfd_display_t *display);
+void av_display_upload(av_display_t *display);
 
 ///
-cairo_t *display_get_cairo(const mfd_display_t *display);
+cairo_t *av_display_get_cairo(const av_display_t *display);
 
 ///
-unsigned display_get_texture(const mfd_display_t *display);
+unsigned av_display_get_texture(const av_display_t *display);
 
 
 #ifdef __cplusplus

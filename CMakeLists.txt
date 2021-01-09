@@ -45,3 +45,4 @@ add_subdirectory(src)
 if(LIBMFD_BUILD_DEMO)
     add_subdirectory(demo)
 endif()
+
