@@ -15,7 +15,7 @@ struct av_module_t {
     av_module_init_f init;
     av_module_update_f update;
     av_module_fini_f fini;
-    
+
     void *data;
     double interval;
     bool stop;
@@ -64,7 +64,7 @@ static void *module_thread(void *refcon) {
     av_module_t *module = refcon;
     uint64_t t = cc_microtime();
     pthread_mutex_lock(&module->mt);
-    
+
     if(module->init) module->init(module->data);
 
     while(!module->stop) {
@@ -134,9 +134,3 @@ void av_module_wait(av_module_t *module) {
     pthread_cond_wait(&module->cv, &module->mt);
     pthread_mutex_unlock(&module->mt);
 }
-
-
-
-
-
-
