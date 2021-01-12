@@ -24,7 +24,6 @@ PROPERTIES
    C_VISIBILITY_PRESET hidden
    VISIBILITY_INLINES_HIDDEN ON
    POSITION_INDEPENDENT_CODE ON
-   LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fno-stack-protector"
 )
 
 target_link_libraries(avionics PUBLIC ${OPENGL_LIBRARIES} cairo pixman-1 freetype pthread)
