@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 project(libavionics VERSION 0.0.1 LANGUAGES C)
+cmake_policy(SET CMP0077 NEW)
 
 option(LIBAV_DEPS_DIR "Library directory containing Cairo and Freetype" "")
 option(LIBMFD_BUILD_DEMO "Build a glfw-based demo" OFF)
