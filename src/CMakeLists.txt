@@ -19,6 +19,8 @@ target_include_directories(avionics PUBLIC
         "${LIBAV_DEPS_DIR}/include/freetype2"
 )
 
+target_link_directories(avionics PUBLIC "${LIBAV_DEPS_DIR}/lib")
+
 set_target_properties(avionics
 PROPERTIES
    C_VISIBILITY_PRESET hidden
