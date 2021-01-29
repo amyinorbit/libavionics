@@ -28,4 +28,4 @@ PROPERTIES
    POSITION_INDEPENDENT_CODE ON
 )
 
-target_link_libraries(avionics PUBLIC ${OPENGL_LIBRARIES} cairo pixman-1 freetype pthread)
+target_link_libraries(avionics PUBLIC ${OPENGL_LIBRARIES} ccore::ccore cairo pixman-1 freetype pthread)
