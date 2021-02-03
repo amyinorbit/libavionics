@@ -1,5 +1,5 @@
 
-find_package(OpenGL REQUIRED)
+# find_package(OpenGL REQUIRED)
 
 add_library(avionics STATIC display.c module)
 target_compile_features(avionics PUBLIC c_std_11)
@@ -28,4 +28,4 @@ PROPERTIES
    POSITION_INDEPENDENT_CODE ON
 )
 
-target_link_libraries(avionics PUBLIC ${OPENGL_LIBRARIES} ccore::ccore cairo pixman-1 freetype pthread)
+target_link_libraries(avionics PUBLIC ccore::ccore cairo pixman-1 freetype z pthread)
