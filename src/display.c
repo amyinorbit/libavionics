@@ -32,8 +32,6 @@ static void check_gl(const char *where, int line) {
     cc_log(LOG_WARN, where, "OpenGL error code 0x%04x line %d", error, line);
 }
 
-#define GL_DEBUG 1
-
 #ifdef GL_DEBUG
 #define CHECK_GL() check_gl(__FUNCTION__, __LINE__)
 #else
@@ -157,8 +155,6 @@ void av_display_finish_back_buffer(av_display_t *display) {
     
     const void *src = cairo_image_surface_get_data(display->surface);
     CCASSERT(src);
-    
-    CCDEBUG("back: %p", display->current);
     
     memcpy(display->current, src, 4 * display->width * display->height);
     pthread_mutex_lock(&display->mt);
