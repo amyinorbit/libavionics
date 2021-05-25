@@ -6,37 +6,12 @@
 // Licensed under the MIT License
 // =^•.•^=
 //===--------------------------------------------------------------------------------------------===
-#include <libavionics/display.h>
+#include "display.h"
 #include <ccore/memory.h>
 #include <ccore/log.h>
 #include <stdlib.h>
 #include <string.h>
-#include "glad.h"
-
-struct av_display_s {
-    unsigned width, height;
-    unsigned texture;
-
-    bool is_back_ready;
-    pthread_mutex_t mt;
-    unsigned front, back;
-    unsigned pbos[2];
-    void *current;
-    cairo_surface_t *surface;
-    cairo_t *cairo;
-};
-
-static void check_gl(const char *where, int line) {
-    GLenum error = glGetError();
-    if(error == GL_NO_ERROR) return;
-    cc_log(LOG_WARN, where, "OpenGL error code 0x%04x line %d", error, line);
-}
-
-#ifdef GL_DEBUG
-#define CHECK_GL() check_gl(__FUNCTION__, __LINE__)
-#else
-#define CHECK_GL()
-#endif
+// #include "glad.h"
 
 static void init_buffer(av_display_t *display, int idx) {
     CCASSERT(display);
@@ -70,7 +45,6 @@ void unmap_buffer(av_display_t *display, int idx) {
     glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
     CHECK_GL();
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    CHECK_GL();
     CHECK_GL();
 }
 
@@ -115,6 +89,8 @@ av_display_t *av_display_new(unsigned width, unsigned height) {
     CCASSERT(display->surface);
     display->cairo = cairo_create(display->surface);
     CCASSERT(display->cairo);
+    
+    renderer_init(&display->renderer);
 
     pthread_mutex_init(&display->mt, NULL);
     return display;
@@ -122,6 +98,7 @@ av_display_t *av_display_new(unsigned width, unsigned height) {
 
 void av_display_delete(av_display_t *display) {
     CCASSERT(display);
+    renderer_deinit(&display->renderer);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     pthread_mutex_destroy(&display->mt);

@@ -3,7 +3,7 @@ project(libavionics VERSION 0.0.1 LANGUAGES C)
 cmake_policy(SET CMP0077 NEW)
 
 option(LIBAV_DEPS_DIR "Library directory containing Cairo and Freetype" "")
-option(LIBMFD_BUILD_DEMO "Build a glfw-based demo" OFF)
+option(LIBAV_BUILD_DEMO "Build a glfw-based demo" OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -17,12 +17,11 @@ add_definitions(
 )
 
 find_package(Threads REQUIRED)
-# find_package(ccore 1.6 REQUIRED)
 
 include_directories(include)
 include_directories(src)
 
 add_subdirectory(src)
-if(LIBMFD_BUILD_DEMO)
+if(LIBAV_BUILD_DEMO)
     add_subdirectory(demo)
 endif()
