@@ -140,12 +140,10 @@ void *av_display_get_back_buffer(av_display_t *display) {
 
 void av_display_finish_back_buffer(av_display_t *display) {
     CCASSERT(display);
-    pthread_mutex_lock(&display->mt);
+    
     if(display->is_back_ready || !display->current) {
-        pthread_mutex_unlock(&display->mt);
         return;
     }
-    pthread_mutex_unlock(&display->mt);
     
     cairo_status_t status = cairo_surface_status(display->surface);
     if(status != CAIRO_STATUS_SUCCESS){
@@ -157,23 +155,15 @@ void av_display_finish_back_buffer(av_display_t *display) {
     CCASSERT(src);
     
     memcpy(display->current, src, 4 * display->width * display->height);
-    pthread_mutex_lock(&display->mt);
+    // pthread_mutex_lock(&display->mt);
     display->is_back_ready = true;
-    pthread_mutex_unlock(&display->mt);
+    // pthread_mutex_unlock(&display->mt);
 }
 
 void av_display_upload(av_display_t *display) {
     CCASSERT(display);
     if(!display->is_back_ready) return;
 
-    // Swap the buffers, so we can upload what was drawn in the back buffer
-    pthread_mutex_lock(&display->mt);
-    unmap_buffer(display, display->back);
-    display->back = (display->back + 1) % 2;
-    display->front = (display->front + 1) % 2;
-    display->current = map_buffer(display, display->back);
-    display->is_back_ready = false;
-    pthread_mutex_unlock(&display->mt);
 
     // First, upload the data from the back glBufferData
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, display->pbos[display->front]);
@@ -189,6 +179,15 @@ void av_display_upload(av_display_t *display) {
     glBindTexture(GL_TEXTURE_2D, 0);
     CHECK_GL();
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    
+    // Swap the buffers, so we can upload what was drawn in the back buffer
+    // pthread_mutex_lock(&display->mt);
+    unmap_buffer(display, display->back);
+    display->back = (display->back + 1) % 2;
+    display->front = (display->front + 1) % 2;
+    display->current = map_buffer(display, display->back);
+    display->is_back_ready = false;
+    // pthread_mutex_unlock(&display->mt);
     CHECK_GL();
 }
 
