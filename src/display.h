@@ -11,6 +11,7 @@
 #include <libavionics/gl.h>
 #include <ccore/log.h>
 #include <ccore/math.h>
+#include <XPLMGraphics.h>
 // #include "glad.h"
 
 typedef struct renderer_t {
@@ -44,6 +45,11 @@ struct av_display_s {
     
     renderer_t renderer;
     // OpenGL renderer
+};
+
+struct av_target_s {
+    vec2_t size;
+    float proj[16];
 };
 
 static inline void check_gl(const char *where, int line) {

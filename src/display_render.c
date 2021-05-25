@@ -7,7 +7,6 @@
 // =^•.•^=
 //===--------------------------------------------------------------------------------------------===
 #include "display.h"
-// #include <XPLMGraphics.h>
 #include <ccore/math.h>
 #include <ccore/memory.h>
 #include <stdlib.h>
@@ -37,19 +36,33 @@ static const char *frag_shader =
 
 static bool is_init = false;
 static unsigned default_quad_shader = 0;
-float proj[16];
 
-void av_display_init(double target_width, double target_height) {
+void av_display_init() {
     if(is_init) return;
     default_quad_shader = gl_create_program(vert_shader, frag_shader);
-    gl_ortho(proj, target_width, target_height);
+    if(!default_quad_shader) return;
     is_init = true;
 }
 
 void av_display_deinit() {
     CCASSERT(is_init);
     glDeleteProgram(default_quad_shader);
+    default_quad_shader = 0;
     is_init = false;
+}
+
+av_target_t *av_target_new(double width, double height) {
+    CCASSERT(width > 0);
+    CCASSERT(height > 0);
+    av_target_t *target = cc_alloc(sizeof(av_target_t));
+    target->size = CC_VEC2(width, height);
+    gl_ortho(target->proj, width, height);
+    return target;
+}
+
+void av_target_delete(av_target_t *target) {
+    CCASSERT(target);
+    cc_free(target);
 }
 
 void renderer_init(renderer_t *r) {
@@ -146,12 +159,18 @@ enable_attrib(GLint index, GLint size, GLenum type,
 	}
 }
 
-void av_display_render_gl(av_display_t *display, double x, double y, float brightness) {
+void av_display_render_gl(
+    av_display_t *display,
+    const av_target_t *target,
+    double x,
+    double y,
+    float brightness
+) {
     CCASSERT(is_init);
     CCASSERT(display);
+    CCASSERT(target);
 
     renderer_t *r = &display->renderer;
-    // XPLMSetGraphicsState(0, 1, 0, 0, 1, 0, 0);
     
 #if APPLE
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -168,11 +187,10 @@ void av_display_render_gl(av_display_t *display, double x, double y, float brigh
     
     prepare_vertices(r, CC_VEC2(x, y), CC_VEC2(display->width, display->height));
     
-    glUniformMatrix4fv(r->loc.pvm, 1, GL_TRUE, proj);
+    glUniformMatrix4fv(r->loc.pvm, 1, GL_TRUE, target->proj);
     glUniform1f(r->loc.alpha, brightness);
     glUniform1i(r->loc.tex, 0);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    // glDrawArrays(GL_TRIANGLES, 0, 6);
     CHECK_GL();
 
     glDisableVertexAttribArray(r->loc.vtx_pos);
@@ -183,8 +201,6 @@ void av_display_render_gl(av_display_t *display, double x, double y, float brigh
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
-    // XPLMBindTexture2d(0, 0);
-    // XPLMSetGraphicsState(0, 0, 0, 0, 0, 0, 0);
     CHECK_GL();
 }
 

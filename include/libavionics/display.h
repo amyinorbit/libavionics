@@ -15,9 +15,13 @@ extern "C" {
 #endif
 
 typedef struct av_display_s av_display_t;
+typedef struct av_target_s av_target_t;
 
-void av_display_init(double target_width, double target_height);
+void av_display_init();
 void av_display_deinit();
+
+av_target_t *av_target_new(double width, double height);
+void av_target_delete();
 
 /// Creates a display manager.
 av_display_t *av_display_new(unsigned width, unsigned height);
@@ -37,7 +41,13 @@ cairo_t *av_display_get_cairo(const av_display_t *display);
 /// 
 unsigned av_display_get_texture(const av_display_t *display);
 
-void av_display_render_gl(av_display_t *display, double x, double y, float brightness);
+void av_display_render_gl(
+    av_display_t *display,
+    const av_target_t *target,
+    double x,
+    double y,
+    float brightness
+);
 
 #ifdef __cplusplus
 } /* extern "C" */
