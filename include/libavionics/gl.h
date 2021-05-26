@@ -44,17 +44,3 @@ extern "C" {
 GLuint gl_create_program(const char *vertex, const char *fragment);
 GLuint gl_load_shader(const char *source, int type);
 void gl_ortho(float proj[16], uint32_t width, uint32_t height);
-
-typedef struct renderer_t renderer_t;
-
-// renderer_t *render_new(unsigned width, unsigned height);
-// void render_delete(renderer_t *r);
-// void render_quad(
-//     renderer_t *r,
-//     unsigned tex,
-//     unsigned x,
-//     unsigned y,
-//     unsigned w,
-//     unsigned h,
-//     float brightness
-// );

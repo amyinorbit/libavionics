@@ -8,16 +8,18 @@
 //===--------------------------------------------------------------------------------------------===
 #pragma once
 #include <libavionics/display.h>
+#include <libavionics/renderer.h>
 #include <libavionics/gl.h>
 #include <ccore/log.h>
 #include <ccore/math.h>
 #include <XPLMGraphics.h>
 // #include "glad.h"
 
-typedef struct renderer_t {
-    unsigned quad_vbo;
-    unsigned quad_ibo;
-    unsigned quad_shader;
+struct av_quad_s {
+    unsigned vbo;
+    unsigned ibo;
+    unsigned shader;
+    unsigned tex;
     
     struct {
         int vtx_pos;
@@ -29,7 +31,7 @@ typedef struct renderer_t {
     
     vec2_t last_pos;
     vec2_t last_size;
-} renderer_t;
+};
 
 struct av_display_s {
     unsigned width, height;
@@ -43,7 +45,7 @@ struct av_display_s {
     cairo_surface_t *surface;
     cairo_t *cairo;
     
-    renderer_t renderer;
+    av_quad_t quad;
     // OpenGL renderer
 };
 
@@ -64,5 +66,5 @@ static inline void check_gl(const char *where, int line) {
 #define CHECK_GL()
 #endif
 
-void renderer_init(renderer_t *r);
-void renderer_deinit(renderer_t *r);
+void av_quad_init(av_quad_t *r, unsigned texture, unsigned shader);
+void av_quad_deinit(av_quad_t *r);

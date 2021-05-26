@@ -4,7 +4,7 @@
 add_library(avionics
 STATIC
     display.c
-    display_render.c
+    renderer.c
     module.c
     dref.c
     glad.c

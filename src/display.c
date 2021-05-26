@@ -90,15 +90,14 @@ av_display_t *av_display_new(unsigned width, unsigned height) {
     display->cairo = cairo_create(display->surface);
     CCASSERT(display->cairo);
     
-    renderer_init(&display->renderer);
-
+    av_quad_init(&display->quad, display->texture, 0);
     pthread_mutex_init(&display->mt, NULL);
     return display;
 }
 
 void av_display_delete(av_display_t *display) {
     CCASSERT(display);
-    renderer_deinit(&display->renderer);
+    av_quad_deinit(&display->quad);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     pthread_mutex_destroy(&display->mt);
@@ -177,4 +176,9 @@ cairo_t *av_display_get_cairo(const av_display_t *display) {
 unsigned av_display_get_texture(const av_display_t *display) {
     CCASSERT(display);
     return display->texture;
+}
+
+av_quad_t *av_display_get_quad(av_display_t *display) {
+    CCASSERT(display);
+    return &display->quad;
 }

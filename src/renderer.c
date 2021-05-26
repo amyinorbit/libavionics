@@ -37,14 +37,14 @@ static const char *frag_shader =
 static bool is_init = false;
 static unsigned default_quad_shader = 0;
 
-void av_display_init() {
+void av_render_init() {
     if(is_init) return;
     default_quad_shader = gl_create_program(vert_shader, frag_shader);
     if(!default_quad_shader) return;
     is_init = true;
 }
 
-void av_display_deinit() {
+void av_render_deinit() {
     CCASSERT(is_init);
     glDeleteProgram(default_quad_shader);
     default_quad_shader = 0;
@@ -55,8 +55,7 @@ av_target_t *av_target_new(double width, double height) {
     CCASSERT(width > 0);
     CCASSERT(height > 0);
     av_target_t *target = cc_alloc(sizeof(av_target_t));
-    target->size = CC_VEC2(width, height);
-    gl_ortho(target->proj, width, height);
+    av_target_set_size(target, width, height);
     return target;
 }
 
@@ -65,27 +64,45 @@ void av_target_delete(av_target_t *target) {
     cc_free(target);
 }
 
-void renderer_init(renderer_t *r) {
-    // XPLMSetGraphicsState(0, 1, 0, 0, 1, 0, 0);
+void av_target_set_size(av_target_t *target, double width, double height) {
+    CCASSERT(target);
+    CCASSERT(width > 0);
+    CCASSERT(height > 0);
+    target->size = CC_VEC2(width, height);
+    gl_ortho(target->proj, width, height);
+}
+
+av_quad_t *av_quad_new(unsigned tex, unsigned shader) {
+    av_quad_t *quad = cc_alloc(sizeof(av_quad_t));
+    av_quad_init(quad, tex, shader);
+    return quad;
+}
+
+void av_quad_delete(av_quad_t *quad) {
+    av_quad_deinit(quad);
+    cc_free(quad);
+}
+
+void av_quad_init(av_quad_t *quad, unsigned tex, unsigned shader) {
+    quad->last_pos = CC_VEC2_NULL;
+    quad->last_size = CC_VEC2_NULL;
     
-    r->last_pos = CC_VEC2_NULL;
-    r->last_size = CC_VEC2_NULL;
-    
-    r->quad_shader = default_quad_shader;
-    glGenBuffers(1, &r->quad_vbo);
-    glGenBuffers(1, &r->quad_ibo);
+    quad->tex = tex;
+    quad->shader = shader ? shader : default_quad_shader;
+    glGenBuffers(1, &quad->vbo);
+    glGenBuffers(1, &quad->ibo);
     
     static const GLuint indices[] = {0, 1, 2, 0, 2, 3};
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, r->quad_ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad->ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     
-    glUseProgram(r->quad_shader);
-    r->loc.pvm = glGetUniformLocation(r->quad_shader, "pvm");
-    r->loc.tex = glGetUniformLocation(r->quad_shader, "tex");
-    r->loc.alpha = glGetUniformLocation(r->quad_shader, "alpha");
+    glUseProgram(quad->shader);
+    quad->loc.pvm = glGetUniformLocation(quad->shader, "pvm");
+    quad->loc.tex = glGetUniformLocation(quad->shader, "tex");
+    quad->loc.alpha = glGetUniformLocation(quad->shader, "alpha");
     
-    r->loc.vtx_pos = glGetAttribLocation(r->quad_shader, "vtx_pos");
-    r->loc.vtx_tex0 = glGetAttribLocation(r->quad_shader, "vtx_tex0");
+    quad->loc.vtx_pos = glGetAttribLocation(quad->shader, "vtx_pos");
+    quad->loc.vtx_tex0 = glGetAttribLocation(quad->shader, "vtx_tex0");
 
     glUseProgram(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -93,15 +110,15 @@ void renderer_init(renderer_t *r) {
     glBindTexture(GL_TEXTURE_2D, 0);
     // XPLMBindTexture2d(0, 0);
 
-    CCDEBUG("Renderer VBO: %u", r->quad_vbo);
-    CCDEBUG("Renderer IBO: %u", r->quad_ibo);
-    CCDEBUG("Renderer Shader: %u", r->quad_shader);
+    CCDEBUG("Quad VBO: %u", quad->vbo);
+    CCDEBUG("Quad IBO: %u", quad->ibo);
+    CCDEBUG("Quad Shader: %u", quad->shader);
 }
 
- void renderer_deinit(renderer_t *r) {
+ void renderer_deinit(av_quad_t *quad) {
     // XPLMSetGraphicsState(0, 1, 0, 0, 1, 0, 0);
-    glDeleteBuffers(1, &r->quad_vbo);
-    glDeleteBuffers(1, &r->quad_ibo);
+    glDeleteBuffers(1, &quad->vbo);
+    glDeleteBuffers(1, &quad->ibo);
 }
 
 typedef struct {
@@ -118,8 +135,8 @@ static inline bool vec2_eq(vec2_t a, vec2_t b) {
     return a.x == b.x && a.y == b.y;
 }
 
-static void prepare_vertices(renderer_t *r, vec2_t pos, vec2_t size) {
-    if(vec2_eq(r->last_pos, pos) && vec2_eq(r->last_size, size)) return;
+static void prepare_vertices(av_quad_t *quad, vec2_t pos, vec2_t size) {
+    if(vec2_eq(quad->last_pos, pos) && vec2_eq(quad->last_size, size)) return;
     vertex_t vert[4];
     
     vert[0].pos.x = pos.x;
@@ -139,17 +156,16 @@ static void prepare_vertices(renderer_t *r, vec2_t pos, vec2_t size) {
     vert[3].tex = (vec2f_t){0, 1};
     
     CCDEBUG("Uploading new vertex data");
-    glBindBuffer(GL_ARRAY_BUFFER, r->quad_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, quad->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vert), vert, GL_STATIC_DRAW);
     CHECK_GL();
     
-    r->last_pos = pos;
-    r->last_size = size;
+    quad->last_pos = pos;
+    quad->last_size = size;
     // glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-static inline void
-enable_attrib(GLint index, GLint size, GLenum type,
+static inline void enable_attrib(GLint index, GLint size, GLenum type,
     GLboolean normalized, size_t stride, size_t offset)
 {
 	if (index != -1) {
@@ -159,42 +175,34 @@ enable_attrib(GLint index, GLint size, GLenum type,
 	}
 }
 
-void av_display_render_gl(
-    av_display_t *display,
-    const av_target_t *target,
-    double x,
-    double y,
-    float brightness
-) {
+void av_render_quad(av_target_t *target, av_quad_t *quad, vec2_t pos, vec2_t size, double alpha) {
     CCASSERT(is_init);
-    CCASSERT(display);
+    CCASSERT(quad);
     CCASSERT(target);
-
-    renderer_t *r = &display->renderer;
     
 #if APPLE
     glDisableClientState(GL_VERTEX_ARRAY);
 #endif
     
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, display->texture);
-    glBindBuffer(GL_ARRAY_BUFFER, r->quad_vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, r->quad_ibo);
+    glBindTexture(GL_TEXTURE_2D, quad->tex);
+    glBindBuffer(GL_ARRAY_BUFFER, quad->vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad->ibo);
     
-    enable_attrib(r->loc.vtx_pos, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), offsetof(vertex_t, pos));
-    enable_attrib(r->loc.vtx_tex0, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), offsetof(vertex_t, tex));
-    glUseProgram(r->quad_shader);
+    enable_attrib(quad->loc.vtx_pos, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), offsetof(vertex_t, pos));
+    enable_attrib(quad->loc.vtx_tex0, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), offsetof(vertex_t, tex));
+    glUseProgram(quad->shader);
     
-    prepare_vertices(r, CC_VEC2(x, y), CC_VEC2(display->width, display->height));
+    prepare_vertices(quad, pos, size);
     
-    glUniformMatrix4fv(r->loc.pvm, 1, GL_TRUE, target->proj);
-    glUniform1f(r->loc.alpha, brightness);
-    glUniform1i(r->loc.tex, 0);
+    glUniformMatrix4fv(quad->loc.pvm, 1, GL_TRUE, target->proj);
+    glUniform1f(quad->loc.alpha, alpha);
+    glUniform1i(quad->loc.tex, 0);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     CHECK_GL();
 
-    glDisableVertexAttribArray(r->loc.vtx_pos);
-    glDisableVertexAttribArray(r->loc.vtx_tex0);
+    glDisableVertexAttribArray(quad->loc.vtx_pos);
+    glDisableVertexAttribArray(quad->loc.vtx_tex0);
     
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
