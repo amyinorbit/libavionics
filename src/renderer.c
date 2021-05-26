@@ -115,7 +115,7 @@ void av_quad_init(av_quad_t *quad, unsigned tex, unsigned shader) {
     CCDEBUG("Quad Shader: %u", quad->shader);
 }
 
- void renderer_deinit(av_quad_t *quad) {
+ void av_quad_deinit(av_quad_t *quad) {
     // XPLMSetGraphicsState(0, 1, 0, 0, 1, 0, 0);
     glDeleteBuffers(1, &quad->vbo);
     glDeleteBuffers(1, &quad->ibo);
