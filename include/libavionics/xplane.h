@@ -9,6 +9,7 @@
 #pragma once
 #include <stdbool.h>
 #include <XPLMDataAccess.h>
+#include <XPLMUtilities.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,6 +25,14 @@ typedef struct dref_t {
     void *value;
 } dref_t;
 
+typedef int (*cmd_cb_t)(XPLMCommandRef ref, XPLMCommandPhase phase, void *refcon);
+
+XPLMCommandRef cmd_find(const char *name);
+XPLMCommandRef cmd_findf(const char *fmt, ...);
+XPLMCommandRef cmd_bind(const char *name, cmd_cb_t cb, bool before, void *refcon);
+XPLMCommandRef cmd_bindf(const char *fmt, cmd_cb_t cb, bool before, void *refcon, ...);
+XPLMCommandRef cmd_unbind(const char *fmt, cmd_cb_t cb, bool before, void *refcon);
+XPLMCommandRef cmd_unbindf(const char *fmt, cmd_cb_t cb, bool before, void *refcon, ...);
 
 bool dref_find(dref_t *dr, const char *format, ...);
 bool dref_find_strict(dref_t *dr, const char *format, ...);

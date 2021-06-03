@@ -51,11 +51,14 @@ void av_render_deinit() {
     is_init = false;
 }
 
-av_target_t *av_target_new(double width, double height) {
+av_target_t *av_target_new(double x, double y, double width, double height) {
     CCASSERT(width > 0);
     CCASSERT(height > 0);
     av_target_t *target = cc_alloc(sizeof(av_target_t));
     av_target_set_size(target, width, height);
+    target->size = CC_VEC2(width, height);
+    target->offset = CC_VEC2(x, y);
+    gl_ortho(target->proj, target->offset.x, target->offset.y, target->size.x, target->size.y);
     return target;
 }
 
@@ -64,12 +67,19 @@ void av_target_delete(av_target_t *target) {
     cc_free(target);
 }
 
+void av_target_set_offset(av_target_t *target, double x, double y) {
+    CCASSERT(target);
+    target->offset = CC_VEC2(x, y);
+    gl_ortho(target->proj, x, y, target->size.x, target->size.y);
+    
+}
+
 void av_target_set_size(av_target_t *target, double width, double height) {
     CCASSERT(target);
     CCASSERT(width > 0);
     CCASSERT(height > 0);
     target->size = CC_VEC2(width, height);
-    gl_ortho(target->proj, width, height);
+    gl_ortho(target->proj, target->offset.x, target->offset.y, width, height);
 }
 
 av_quad_t *av_quad_new(unsigned tex, unsigned shader) {
@@ -155,7 +165,6 @@ static void prepare_vertices(av_quad_t *quad, vec2_t pos, vec2_t size) {
     vert[3].pos.y = pos.y + size.y;
     vert[3].tex = (vec2f_t){0, 1};
     
-    CCDEBUG("Uploading new vertex data");
     glBindBuffer(GL_ARRAY_BUFFER, quad->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vert), vert, GL_STATIC_DRAW);
     CHECK_GL();

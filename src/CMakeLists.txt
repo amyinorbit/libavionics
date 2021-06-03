@@ -7,6 +7,7 @@ STATIC
     renderer.c
     module.c
     dref.c
+    cmd.c
     glad.c
     gl.c
     xplane.c

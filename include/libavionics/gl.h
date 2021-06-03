@@ -43,4 +43,5 @@ extern "C" {
 
 GLuint gl_create_program(const char *vertex, const char *fragment);
 GLuint gl_load_shader(const char *source, int type);
-void gl_ortho(float proj[16], uint32_t width, uint32_t height);
+GLuint gl_load_tex(const char *path, int *w, int *h);
+void gl_ortho(float proj[16], float x, float y, float width, float height);

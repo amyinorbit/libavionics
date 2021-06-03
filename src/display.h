@@ -51,6 +51,7 @@ struct av_display_s {
 
 struct av_target_s {
     vec2_t size;
+    vec2_t offset;
     float proj[16];
 };
 
